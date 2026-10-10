@@ -1,3 +1,5 @@
+agent.md
+plan.md
 .env
 .env.*
 !.env.example
