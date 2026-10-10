@@ -1,0 +1,42 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+
+    restart: unless-stopped
+
+    ports:
+      - "5678:5678"
+
+    environment:
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - TZ=Europe/Berlin
+
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+
+      - N8N_HOST=n8n.mugenassists.win
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.mugenassists.win/
+      - N8N_EDITOR_BASE_URL=https://n8n.mugenassists.win/
+      - N8N_PROXY_HOPS=1
+
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
+
+    restart: unless-stopped
+
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      - POSTGRES_DB=${POSTGRES_DB:? POSTGRES_DB in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  n8n_data:
+  postgres_data:
