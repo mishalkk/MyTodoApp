@@ -1,21 +1,41 @@
-# n8n + PostgreSQL deployment plan
+# MyTodo implementation and deployment plan
 
-This plan covers the changes and checks identified in the review of `compose.yaml`. Implementation is still pending.
+MyTodo is a general-purpose personal todo bot for Telegram, using n8n and PostgreSQL. This plan covers the application work and deployment checks. Workflow and schema implementation remain pending.
+
+## Application implementation
+
+- [x] Define MyTodo's general-purpose scope and update project documentation.
+- [ ] Inspect/export the existing n8n workflow and confirm installed version and node names.
+- [ ] Create a tasks table with task ID, Telegram chat ID, Telegram user ID, task text, creation time, and optional completion time.
+- [ ] Create a pending-input table keyed by chat ID and user ID for the Add flow.
+- [ ] Build `/start` and `/menu` with List, Add, Complete, and Remove buttons.
+- [ ] Route Message and Callback Query updates and acknowledge callback queries.
+- [ ] Implement List for the current user's open tasks in the current chat, including an empty state.
+- [ ] Implement Add: prompt for text, validate nonempty input, insert the task, and clear pending state.
+- [ ] Implement Complete: mark a selected task completed and retain its history.
+- [ ] Implement Remove for a selected task owned by the requesting user in the current chat.
+- [ ] Implement `/cancel` to clear pending state without adding a task.
+- [ ] Use parameterized SQL and enforce chat/user ownership on every task read and mutation.
+- [ ] Handle stale buttons, missing tasks, repeated completion, and database failures with clear Telegram responses.
+- [ ] Verify the full flow with two users, including in a group chat, to check that their lists and input states remain separate.
+- Due dates, reminders, tags, priorities, and shared lists are deferred.
+- Fresh installations can use `mytodo_db`. Preserve the existing database name and volume until any rename is explicitly planned and backed up.
 
 ## 1. Decide how PostgreSQL will be used
 
-- [ ] Confirm whether PostgreSQL stores game data only, n8n's internal data, or both.
-- Current behavior: n8n stores its internal data in SQLite in `n8n_data`. PostgreSQL provides `game_todo_db` independently.
-- For game data only, configure an n8n PostgreSQL credential with host `postgres`, port `5432`, database `game_todo_db`, and a dedicated application user.
+- [ ] Confirm whether PostgreSQL stores MyTodo task data only, n8n's internal data, or both.
+- Current behavior: n8n stores its internal data in SQLite in `n8n_data`. PostgreSQL provides the application database independently; retain its existing name until a migration is planned.
+- For MyTodo task data only, configure an n8n PostgreSQL credential with host `postgres`, port `5432`, the current application database, and a dedicated application user.
 - If both applications use PostgreSQL, keep their databases and roles separate.
 
 ## 2. Secure database credentials and permissions
 
 - [ ] Replace `sample_password` with a strong generated password.
-- [ ] Move deployment secrets out of `compose.yaml` into an untracked `.env` file or Docker secrets.
+- [x] Read PostgreSQL credentials from environment variables instead of hardcoding them in `compose.yaml`.
+- [ ] Verify the local `.env` contains the correct existing database credentials.
 - [ ] Add a `.env.example` containing placeholders and document required variables.
-- [ ] Ensure `.env` is excluded from version control.
-- [ ] Create a dedicated game application role with only the permissions it needs. Do not use the `root` database superuser in workflow credentials.
+- [x] Ensure `.env` is excluded from version control.
+- [ ] Create a dedicated MyTodo application role with only the permissions it needs. Do not use the `root` database superuser in workflow credentials.
 - [ ] If n8n uses PostgreSQL for internal storage, create its own database and role with the permissions required for its migrations.
 - Existing PostgreSQL volumes retain their original users and passwords: changing `POSTGRES_*` variables does not update an initialized database. Apply role/password changes explicitly and update clients together.
 
@@ -47,7 +67,7 @@ This plan covers the changes and checks identified in the review of `compose.yam
 - [ ] Back up `n8n_data`, including the credential encryption key and SQLite database if SQLite remains in use. Take a consistent SQLite backup with n8n stopped or an appropriate database backup method.
 - [ ] If setting an explicit `N8N_ENCRYPTION_KEY`, reuse the existing key on an initialized deployment; do not replace it with a new key.
 - [ ] Store backups and required secrets securely outside the deployment host, with a documented schedule and retention policy.
-- [ ] Test restoring into an isolated deployment and verify workflows, saved credentials, and game data.
+- [ ] Test restoring into an isolated deployment and verify workflows, saved credentials, and MyTodo task data.
 - [ ] Document that `docker compose down -v` deletes the persistent volumes and must not be used for routine restarts or upgrades.
 
 ## 7. Validate the completed setup
@@ -55,7 +75,7 @@ This plan covers the changes and checks identified in the review of `compose.yam
 - [ ] Run `docker compose config --quiet` to validate the configuration without printing resolved secrets.
 - [ ] Start the deployment and confirm PostgreSQL readiness and clean n8n startup logs.
 - [ ] Confirm the n8n editor is reachable through HTTPS.
-- [ ] Execute an n8n workflow that reads and writes test game data using the restricted database role.
+- [ ] Execute an n8n workflow that reads and writes test MyTodo task data using the restricted database role.
 - [ ] If PostgreSQL is n8n's backend, verify n8n is actually using it.
 - [ ] Test a webhook through the public URL and confirm its generated URL is correct.
 - [ ] Restart/recreate containers without deleting volumes and verify data and credentials persist.

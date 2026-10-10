@@ -1,3 +1,6 @@
+# Keep the existing deployment identity so a folder rename reuses its containers and volumes.
+name: telegramgametodo
+
 services:
   n8n:
     image: docker.n8n.io/n8nio/n8n
@@ -33,7 +36,7 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER:?Set POSTGRES_USER in .env}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      - POSTGRES_DB=${POSTGRES_DB:? POSTGRES_DB in .env}
+      - POSTGRES_DB=${POSTGRES_DB:?Set POSTGRES_DB in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
