@@ -1,5 +1,5 @@
 # Keep the existing deployment identity so a folder rename reuses its containers and volumes.
-name: telegramgametodo
+name: mytodoapp
 
 services:
   n8n:
