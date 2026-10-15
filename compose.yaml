@@ -2,6 +2,12 @@
 name: mytodoapp
 
 services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "127.0.0.1:8000:8000"
+
   n8n:
     image: docker.n8n.io/n8nio/n8n
     container_name: n8n
