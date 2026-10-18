@@ -1,87 +1,68 @@
-# MyTodo implementation and deployment plan
+# Questions for the professor: pseudonymized machine data
 
-MyTodo is a general-purpose personal todo bot for Telegram, using n8n and PostgreSQL. This plan covers the application work and deployment checks. Workflow and schema implementation remain pending.
+## Current status
 
-## Application implementation
+The main dataset scope is established. Exact measurements depend on thesis agreement and receipt of the full raw data. Raw signal delivery still needs to be reconciled with the professor's request.
 
-- [x] Define MyTodo's general-purpose scope and update project documentation.
-- [ ] Inspect/export the existing n8n workflow and confirm installed version and node names.
-- [ ] Create a tasks table with task ID, Telegram chat ID, Telegram user ID, task text, creation time, and optional completion time.
-- [ ] Create a pending-input table keyed by chat ID and user ID for the Add flow.
-- [ ] Build `/start` and `/menu` with List, Add, Complete, and Remove buttons.
-- [ ] Route Message and Callback Query updates and acknowledge callback queries.
-- [ ] Implement List for the current user's open tasks in the current chat, including an empty state.
-- [ ] Implement Add: prompt for text, validate nonempty input, insert the task, and clear pending state.
-- [ ] Implement Complete: mark a selected task completed and retain its history.
-- [ ] Implement Remove for a selected task owned by the requesting user in the current chat.
-- [ ] Implement `/cancel` to clear pending state without adding a task.
-- [ ] Use parameterized SQL and enforce chat/user ownership on every task read and mutation.
-- [ ] Handle stale buttons, missing tasks, repeated completion, and database failures with clear Telegram responses.
-- [ ] Verify the full flow with two users, including in a group chat, to check that their lists and input states remain separate.
-- Due dates, reminders, tags, priorities, and shared lists are deferred.
-- Fresh installations can use `mytodo_db`. Preserve the existing database name and volume until any rename is explicitly planned and backed up.
+## Current answers for the professor
 
-## 1. Decide how PostgreSQL will be used
+1. **Data for each pseudonymized machine:** Both machines have the same set of 300+ sensor attributes, including numerical, categorical, and binary values. Machine ID is the only fixed attribute identified so far. Internal attribute names will be replaced with generic descriptive names that retain the sensor's meaning. The deliverable is an event-level classification dataset, with one row per stop containing aggregated sensor features and a stop-type label. The provisional source window is 7 seconds before and 3 seconds after each stop. Raw signal series will not be delivered; the derivation will be documented in detail. Exact attribute ranges, possible categorical/binary values, sampling interval, and readings per window can be determined after full data access.
+2. **Number of machines:** Two, covering six months of operation each. Raw data is approximately 100+ GB per machine. Filtering to stop-related data is estimated to retain under 10% before the final dataset is prepared; actual size is pending measurement.
+3. **Faults per machine:** The study uses a shared set of 10 stop types for both machines. Across both machines, these account for approximately 5,000-6,000 events in six months, out of approximately 11,000 events across all stop types. Exact occurrence counts for each selected stop type, separately for each machine, can be calculated after full data access. An equal split between machines must not be assumed.
 
-- [ ] Confirm whether PostgreSQL stores MyTodo task data only, n8n's internal data, or both.
-- Current behavior: n8n stores its internal data in SQLite in `n8n_data`. PostgreSQL provides the application database independently; retain its existing name until a migration is planned.
-- For MyTodo task data only, configure an n8n PostgreSQL credential with host `postgres`, port `5432`, the current application database, and a dedicated application user.
-- If both applications use PostgreSQL, keep their databases and roles separate.
+These answers distinguish stop types from event occurrences. The user confirms that acceptance of an aggregated dataset in place of raw signal series is currently under discussion with the professor; no agreement has been confirmed.
 
-## 2. Secure database credentials and permissions
+## Confirmed knowledge
 
-- [ ] Replace `sample_password` with a strong generated password.
-- [x] Read PostgreSQL credentials from environment variables instead of hardcoding them in `compose.yaml`.
-- [ ] Verify the local `.env` contains the correct existing database credentials.
-- [ ] Add a `.env.example` containing placeholders and document required variables.
-- [x] Ensure `.env` is excluded from version control.
-- [ ] Create a dedicated MyTodo application role with only the permissions it needs. Do not use the `root` database superuser in workflow credentials.
-- [ ] If n8n uses PostgreSQL for internal storage, create its own database and role with the permissions required for its migrations.
-- Existing PostgreSQL volumes retain their original users and passwords: changing `POSTGRES_*` variables does not update an initialized database. Apply role/password changes explicitly and update clients together.
+- The machine sensor data includes more than 300 attributes, with the same sensor attributes on both machines. Missing readings have not yet been assessed.
+- Examples include valve pressures, rotor speed, laser convergence, component on/off flags, categorical machine/component configurations, and ingredients used.
+- Attributes have varied units and value types: pressure, speed, position, categorical values, and binary states such as on/off and alert/normal. Exact units are not yet specified.
+- This describes the overall attribute set. It does not yet distinguish static machine metadata from values recorded over time. Configuration and ingredient attributes must not be assumed static without confirmation.
+- Exact attribute inventory, pseudonymized names/IDs, numerical ranges, and categorical value sets remain unconfirmed.
+- There are two source machines available for the study. They have the same sensor attributes and almost the same value behavior, as described by the user.
+- The user identifies machine ID as the only fixed value: it remains constant for each machine and differs between the two machines. No additional static machine variables have been identified.
+- The pseudonymized study dataset will contain two machines' worth of data, corresponding to the two source machines.
+- Six months of runtime data is approximately 100+ GB per machine (approximately 200+ GB across both machines).
+- The study focuses on machine-stop classification. The user estimates that filtering to sensor data related to machine stops can retain just under 10% of the full data. This is an estimate, not a measured filtered size; the exact filtering rule is not yet defined.
+- Machine operators maintain an Excel knowledge table describing different machine stops, possible causes, and remedies. Whether it contains timestamped event records linked to sensor data is not yet confirmed.
+- The project will study the top 10 most common machine stops. This establishes an intended scope of 10 stop types/classes; it does not establish the number of individual stop occurrences per machine.
+- The same top 10 stop types are shared between both machines, which are of the same kind and perform almost the same functionality. There is one shared set of 10 classes, not separate top-ten sets per machine. The number of recorded occurrences of each type per machine remains unconfirmed.
+- The user estimates approximately 11,000 stop events across both machines combined, including stop types beyond the selected top 10.
+- Restricting to the shared top 10 stop types gives approximately 5,000-6,000 occurrences across both machines combined. Both this estimate and the approximately 11,000 total stop events cover the same six-month study period. Counts per machine and per stop type remain unknown.
+- Every stop event has an associated UTC timestamp. Labels are available for the training and test data.
+- Sensor readings are recorded at sub-second, millisecond-scale intervals. The user observes that all sensors appear to record at the same interval; this has not yet been verified against the data. The exact interval and regularity remain unconfirmed, so the number of time points cannot yet be calculated.
+- Full runtime sensor data is available. The proposed preprocessing selects a 10-second window around each stop-message UTC timestamp: 7 seconds before the stop and 3 seconds after it. This window is provisional and may change.
+- Selected sensor data will be aggregated around stop timestamps. Candidate numerical statistics include minimum, maximum, and standard deviation; the final aggregation methods remain undecided. Treatment of categorical and binary attributes remains open.
+- The deliverable will be the final dataset used for classification, with all included attributes supplied under anonymized names. Raw sensor data will not be provided.
+- The derivation of the classification dataset from raw data will be explained in detail, including the eventual filtering, windowing, and aggregation decisions. These decisions are not all finalized yet.
+- The professor's request for signal series needs reconciliation with this delivery scope: raw series will not be shared. Ranges and readings per stop window can be determined after full data access; their reporting format remains undecided.
+- Attribute anonymization means replacing the organization's exact names with generic descriptive names, such as `roto1` or `laser_left`, while preserving an indication of the sensor's purpose. This is name replacement, not a claim that all identifying information has been removed.
+- Numerical attribute minimum/maximum values and categorical/binary possible values can be determined after the thesis is agreed and the organization provides the full raw data. They are not available to report now.
+- Each row of the final classification dataset will represent one stop event, with aggregated sensor features and its stop-type label. The estimated 5,000-6,000 selected stop occurrences are a provisional candidate row count before any exclusions during preprocessing; the final row count is not yet known.
+- Rows from the two machines will be appended into one dataset. The user does not currently consider machine identity essential for classification, but confirms that retaining a pseudonymized machine ID is possible if needed. Its inclusion is not yet agreed.
+- Recommendation: retain machine ID as metadata to support per-machine event counts and evaluation. This does not require using it as a classification feature.
+- The user confirms that the exact sensor sampling interval and number of readings in each stop window can be determined once the full raw data is received. These measurements are pending data access.
+- The user confirms that occurrences of each of the selected 10 stop types can also be counted separately for each machine after full data access.
 
-## 3. Configure n8n's PostgreSQL backend, if selected
+## Questions to answer
 
-- [ ] Add `DB_TYPE=postgresdb` and configure `DB_POSTGRESDB_HOST=postgres`, `DB_POSTGRESDB_PORT=5432`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER`, and `DB_POSTGRESDB_PASSWORD`.
-- [ ] If the SQLite instance already contains workflows or credentials, back up and prepare a supported migration before switching databases. Changing the environment variables alone does not migrate existing data.
-- [ ] Preserve the existing n8n credential encryption key and `n8n_data` volume.
+1. What data will be provided for each pseudonymized machine?
+   - Static machine data: pseudonymized variable names and the range for each variable.
+   - For each sensor time series:
+     - Pseudonymized sensor ID.
+     - Sensor value range.
+     - Signal series.
+     - Number of time points.
+2. How many pseudonymized machines will be made?
+3. How many faults will there be per pseudonymized machine?
 
-## 4. Make startup and upgrades predictable
+## Pending measurements and decisions
 
-- [ ] Pin n8n to a tested release instead of using the unversioned image.
-- [ ] Document the PostgreSQL image update policy; the current `postgres:16` tag remains on major version 16 but can receive minor updates.
-- [ ] Add a PostgreSQL healthcheck using `pg_isready` against the configured user and database.
-- [ ] If n8n requires PostgreSQL at startup, add `depends_on` with `condition: service_healthy`.
-- [ ] Document backup, update, verification, and rollback steps before upgrades.
+- After data access: compile the attribute inventory, units, generic names, observed numerical ranges, and categorical/binary possible values. Operating limits have not been established.
+- After data access: measure exact sampling intervals and readings per stop window, assess missing readings, and report final dataset size and row count.
+- After data access: count occurrences by machine and selected stop type.
+- Finalize window duration and aggregation methods, including treatment of categorical and binary values.
+- Decide whether to retain machine ID as metadata; this is possible and recommended but not yet agreed.
+- Discuss with the professor whether the derived classification dataset and detailed methodology satisfy the request for signal series, and whether time-point counts should describe source readings, derived event rows, or both.
 
-## 5. Verify HTTPS and proxy routing
-
-- [ ] Confirm the external reverse proxy or tunnel routes `https://n8n.mugenassists.win/` to n8n on port 5678 and provides a valid TLS certificate.
-- [ ] Verify `N8N_HOST`, `N8N_PROTOCOL`, `WEBHOOK_URL`, and `N8N_EDITOR_BASE_URL` match the deployed URL.
-- [ ] Confirm `N8N_PROXY_HOPS=1` matches the actual number of trusted proxies and that forwarding headers are supplied correctly.
-- [ ] Restrict direct access to port 5678 according to the proxy architecture. Use a loopback binding for a proxy on the same host, or a shared Docker network for a containerized proxy where appropriate.
-- PostgreSQL currently has no published host port; retain that arrangement unless external database access is needed.
-
-## 6. Back up and test recovery
-
-- [ ] Back up PostgreSQL with a database-aware dump and preserve any roles needed for recovery.
-- [ ] Back up `n8n_data`, including the credential encryption key and SQLite database if SQLite remains in use. Take a consistent SQLite backup with n8n stopped or an appropriate database backup method.
-- [ ] If setting an explicit `N8N_ENCRYPTION_KEY`, reuse the existing key on an initialized deployment; do not replace it with a new key.
-- [ ] Store backups and required secrets securely outside the deployment host, with a documented schedule and retention policy.
-- [ ] Test restoring into an isolated deployment and verify workflows, saved credentials, and MyTodo task data.
-- [ ] Document that `docker compose down -v` deletes the persistent volumes and must not be used for routine restarts or upgrades.
-
-## 7. Validate the completed setup
-
-- [ ] Run `docker compose config --quiet` to validate the configuration without printing resolved secrets.
-- [ ] Start the deployment and confirm PostgreSQL readiness and clean n8n startup logs.
-- [ ] Confirm the n8n editor is reachable through HTTPS.
-- [ ] Execute an n8n workflow that reads and writes test MyTodo task data using the restricted database role.
-- [ ] If PostgreSQL is n8n's backend, verify n8n is actually using it.
-- [ ] Test a webhook through the public URL and confirm its generated URL is correct.
-- [ ] Restart/recreate containers without deleting volumes and verify data and credentials persist.
-- [ ] Complete the isolated restore test before declaring the deployment ready.
-
-## References
-
-- [Official n8n PostgreSQL Compose example](https://github.com/n8n-io/n8n-hosting/blob/main/docker-compose/withPostgres/docker-compose.yml)
-- [n8n Docker persistence guidance](https://github.com/n8n-io/n8n/blob/master/docker/images/n8n/README.md)
+Exact ranges, time-series lengths, retained data size, and fault counts remain to be confirmed. Machine count is confirmed as two.

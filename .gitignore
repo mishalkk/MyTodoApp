@@ -6,6 +6,7 @@ plan.md
 
 # Python virtual environments
 .venv/
+.venv-old/
 venv/
 
 # Python bytecode and build artifacts

@@ -3,10 +3,18 @@ name: mytodoapp
 
 services:
   backend:
+    container_name: mytodo_backend
     build:
       context: ./backend
     ports:
       - "127.0.0.1:8000:8000"
+    
+    environment:
+      DB_HOST: ${DB_HOST:?Set DB_HOST in .env}
+      DB_PORT: ${DB_PORT:?Set DB_PORT in .env}
+      DB_NAME: ${APP_DB_NAME:?Set APP_DB_NAME in .env}
+      DB_USER: ${APP_DB_USER:?Set APP_DB_USER in .env}
+      DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}
 
   n8n:
     image: docker.n8n.io/n8nio/n8n
