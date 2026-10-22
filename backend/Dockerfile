@@ -8,6 +8,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY pyproject.toml ./
 COPY app ./app
 
+# Copy Alembic migration files
+COPY alembic.ini ./
+COPY migrations ./migrations
+
 RUN python -m pip install --no-cache-dir .
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 
