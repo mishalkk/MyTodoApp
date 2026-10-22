@@ -1,48 +1,32 @@
 # Backend and database plan
 
-Agreed on 2026-10-15. This is a plan; the Python backend has not been implemented.
+## Architecture
 
-## Goal
+MyTodo uses FastAPI, SQLAlchemy, Alembic, PostgreSQL, and n8n. Docker Compose runs the services. The backend is published on localhost; PostgreSQL is accessed through the Compose network without a published database port.
 
-Add a Python FastAPI backend backed by PostgreSQL. Manage schema changes through SQLAlchemy models and Alembic migrations rather than manual SQL or creating tables on every API startup.
-
-## Domain
-
-- A category contains epics and/or tasks directly.
+- A category contains epics and/or direct tasks.
 - An epic belongs to one category and contains tasks.
-- A task always belongs to a category and optionally to an epic.
-- When a task references an epic, both must belong to the same category. Preserve the composite foreign key enforcing this.
-- Current task statuses: todo, in_progress, done.
-- Sprints, priorities, and due dates are future work.
+- A task requires a category and optionally belongs to an epic in that category.
+- A composite foreign key enforces task/epic category consistency.
+- Task statuses are todo, in_progress, and done.
 
-## Responsibilities
+## Database management
 
-- Docker Compose starts PostgreSQL, n8n, and eventually the API.
-- PostgreSQL's POSTGRES_USER initializes an administrator on first startup with an empty data volume. FastAPI must use a separate regular application login, todo_app.
-- An initialization script will provision the application login and appropriate database access for fresh installations. Changing initialization scripts or environment variables does not update an existing database volume.
-- SQLAlchemy defines the application's database models.
-- Alembic migrations create and evolve tables, constraints, and indexes. Run migrations as an explicit deployment step before starting the API, not independently in every API worker.
-- Keep administrator credentials out of the API configuration. Decide whether migrations use the application owner or a separate migration role before implementation.
-- The persistent postgres_data volume preserves database roles, schema, and data across container recreation.
-- A schema-only dump is a reference/export, not the future source of schema initialization. Avoid running both schema.sql and an initial migration to create the same tables.
+- PostgreSQL initialization provisions its administrator and database only when the data volume is empty. Fresh-install regular-role provisioning remains to be implemented.
+- Application code uses a regular database login supplied through environment configuration. Never store credentials in source or migration files.
+- SQLAlchemy models describe the schema. Alembic migrations create and evolve it as an explicit deployment step rather than on every API worker startup.
+- Keep migration files in version control. A schema dump can be a reference, but avoid using both it and the initial migration to create the same tables.
+- The initial revision is 0421cc4d5ed1. For an existing database, verify schema compatibility before stamping the baseline. For an empty database, apply migrations normally.
+- Fresh-database execution of the initial migration has not yet been verified. Do not claim that a model/database comparison tests the migration itself.
+- Future schema changes follow models -> autogenerate -> review -> upgrade. Preserve existing data and volumes.
 
-## Existing database
+## Implementation sequence
 
-The user created categories, epics, and tasks interactively. The shared schema export includes identity primary keys, checks, indexes, category foreign keys, and the composite task-to-epic foreign key. The user confirmed tests allowing direct category tasks and epic tasks, and rejecting a category/epic mismatch.
+1. Backend/container setup, database connection, and health endpoints.
+2. Category, epic, and task models and initial migration baseline.
+3. Request-scoped database sessions and category request/response schemas.
+4. Category create/list endpoints, then epic and task endpoints with relationship error handling.
+5. n8n integration through the API; n8n's own internal database configuration is a separate concern.
+6. Fresh-install provisioning and deployment readiness, including PostgreSQL health checks and explicit migration execution.
 
-Before making changes, verify the live schema and roles, confirm the test transaction was rolled back, and back up any data to preserve. A dump was pasted in chat; no db/schema.sql file was found in the project when this plan was saved.
-
-Create an initial Alembic migration that can build a fresh database. Compare the existing schema with that migration before stamping the existing database at the baseline revision. Stamping records a revision without executing its migration; do not stamp an unverified or mismatched schema.
-
-## Implementation order
-
-1. Inspect the running database, ownership, privileges, and active Compose volume. Confirm any data to retain.
-2. Scaffold the Python backend with FastAPI, SQLAlchemy, a PostgreSQL driver, and Alembic. Provide configuration examples without committing secrets.
-3. Model the existing schema and create the initial migration. Verify it on a fresh disposable database, then baseline the existing database after checking it matches.
-4. Add fresh-install role provisioning, a PostgreSQL health check, API container configuration, and an explicit migration step to Compose. Preserve existing volumes.
-5. Implement category create/list endpoints first; then epic and task endpoints. Test database relationship constraints and API error handling.
-6. Connect n8n to the API for application operations. Keep n8n's own internal database configuration a separate decision.
-
-## Next discussion
-
-Begin with categories as the first complete API feature: create a category and list categories. Decide how the API will be accessed and authenticated before exposing it outside the local environment. A frontend is not required to begin testing the API.
+Current scope is single-user. Authentication and ownership need to be designed before expanding access. Sprints, priorities, and due dates are future work.

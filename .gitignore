@@ -1,5 +1,10 @@
 agent.md
 plan.md
+
+# Local agent preferences and conversation handoff
+/AGENTS.local.md
+/docs/status.md
+
 .env
 .env.*
 !.env.example
