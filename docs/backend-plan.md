@@ -24,9 +24,22 @@ MyTodo uses FastAPI, SQLAlchemy, Alembic, PostgreSQL, and n8n. Docker Compose ru
 
 1. Backend/container setup, database connection, and health endpoints.
 2. Category, epic, and task models and initial migration baseline.
-3. Request-scoped database sessions and category request/response schemas.
-4. Category create/list endpoints, then epic and task endpoints with relationship error handling.
-5. n8n integration through the API; n8n's own internal database configuration is a separate concern.
-6. Fresh-install provisioning and deployment readiness, including PostgreSQL health checks and explicit migration execution.
+3. Request-scoped database sessions and category/epic request-response schemas. **Completed.**
+4. Category and epic create/list endpoints, then task endpoints with relationship error handling. Category and epic APIs are **completed and user-verified**; task APIs are next.
+5. Automated fresh-install provisioning and deployment readiness, after the category, epic, and task APIs are in place (see below).
+6. n8n integration through the API; n8n's own internal database configuration is a separate concern.
+
+## Automated deployment (after API implementation)
+
+Goal: after supplying server configuration and secrets, `docker compose up` initializes a fresh installation and starts the application without manual table creation.
+
+- Wait for PostgreSQL readiness using a health check.
+- Provision a regular application database login, keeping administrator credentials separate from backend configuration. Preserve existing database names, roles, data, and volumes on established installations.
+- Run `alembic upgrade head` in a one-off migration service to create tables on a fresh database or apply pending migrations to an already versioned database.
+- Start the backend only after provisioning and migrations succeed; do not run table creation in each API worker.
+- Verify the initial migration against an isolated empty test database before declaring fresh deployment ready. Existing unversioned databases still require a verified baseline rather than automatic stamping.
+- Keep PostgreSQL unpublished. Before server deployment, review the n8n reverse-proxy setup and replace the current public `5678:5678` binding with either a loopback-only binding or no host binding, as appropriate for that proxy. Do not make this port change before verifying the proxy dependency.
+
+Defer this deployment work until the task APIs are implemented; the immediate focus is task request/response schemas and endpoints.
 
 Current scope is single-user. Authentication and ownership need to be designed before expanding access. Sprints, priorities, and due dates are future work.

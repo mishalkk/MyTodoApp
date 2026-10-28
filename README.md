@@ -32,10 +32,11 @@ Implemented:
 - Database connection and health endpoints
 - Category, epic, and task models
 - Initial Alembic migration
+- Category and epic create/list APIs
 
 Planned:
 
-- Category create/list endpoints, followed by epic and task endpoints
+- Task endpoints, including category/epic relationship error handling
 - Telegram actions for listing, adding, completing, and removing tasks
 - Google Calendar and Google Drive integrations
 - Later enhancements such as priorities, due dates, reminders, and tags
@@ -88,7 +89,7 @@ Preserve existing database volumes.
 
 The current scope is personal, single-user use. The backend binds to localhost, and PostgreSQL has no published host port.
 
-The n8n configuration includes deployment-specific reverse proxy URLs and publishes port 5678 on all host interfaces. Review its network access and proxy configuration before deploying elsewhere.
+The n8n configuration includes deployment-specific reverse proxy URLs and currently publishes port 5678 on all host interfaces. Before server deployment, verify the reverse-proxy upstream and restrict this to loopback or remove the host binding if the proxy runs on the Docker network. Do not make that change until the proxy dependency is confirmed.
 
 ## Further reading
 

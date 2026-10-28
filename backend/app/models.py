@@ -4,7 +4,8 @@ from sqlalchemy import (BigInteger, Identity, Text, text, DateTime, func,
                         CheckConstraint, ForeignKey, Index, UniqueConstraint, ForeignKeyConstraint)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-# TODO: Optimise Data table size
+# TODO: Optimise Data table size, fix the create time (if needed)
+
 # Parent class that every other model will inherite
 class Base(DeclarativeBase):
     pass
@@ -13,6 +14,7 @@ class Base(DeclarativeBase):
 class Category(Base):
     __tablename__   = "categories"
 
+    # TODO: Name Already Exists
     __table_args__  = (
         CheckConstraint(
             "length(trim(name)) > 0",
