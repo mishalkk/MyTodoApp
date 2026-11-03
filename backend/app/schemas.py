@@ -3,7 +3,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, StringConstraints, Field
 
-
+# -------------------------------------------------------------------------------------------
+# Category Schema
+# -------------------------------------------------------------------------------------------
 class CategoryCreate(BaseModel):
     name: Annotated[
         str,
@@ -20,8 +22,9 @@ class CategoryRead(BaseModel):
     description: str|None
     created_at: datetime
 
-
+# -------------------------------------------------------------------------------------------
 # Epic Schema
+# -------------------------------------------------------------------------------------------
 class EpicCreate(BaseModel):
     category_id: Annotated[int, Field(gt=0)]
     name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -37,9 +40,11 @@ class EpicRead(BaseModel):
     description: str|None
     created_at: datetime
 
-
+# -------------------------------------------------------------------------------------------
+# Task Schema
+# -------------------------------------------------------------------------------------------
 class TaskCreate(BaseModel):
-    catefory_id: Annotated[int, Field(gt=0)]
+    category_id: Annotated[int, Field(gt=0)]
     epic_id: Annotated[int, Field(gt=0)] | None = None
     title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
     description: str | None = None
@@ -49,3 +54,10 @@ class TaskRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    category_id: int
+    epic_id: int | None
+    title: str
+    description: str | None
+    status: str
+    created_at: datetime
+

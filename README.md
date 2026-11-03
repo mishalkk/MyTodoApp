@@ -36,7 +36,7 @@ Implemented:
 
 Planned:
 
-- Task endpoints, including category/epic relationship error handling
+- Task endpoints, including category/epic relationship error handling and human-readable category/epic names in list responses
 - Telegram actions for listing, adding, completing, and removing tasks
 - Google Calendar and Google Drive integrations
 - Later enhancements such as priorities, due dates, reminders, and tags

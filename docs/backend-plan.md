@@ -25,7 +25,7 @@ MyTodo uses FastAPI, SQLAlchemy, Alembic, PostgreSQL, and n8n. Docker Compose ru
 1. Backend/container setup, database connection, and health endpoints.
 2. Category, epic, and task models and initial migration baseline.
 3. Request-scoped database sessions and category/epic request-response schemas. **Completed.**
-4. Category and epic create/list endpoints, then task endpoints with relationship error handling. Category and epic APIs are **completed and user-verified**; task APIs are next.
+4. Category and epic create/list endpoints, then task endpoints with relationship error handling. Category and epic APIs are **completed and user-verified**; task APIs are next. List responses must include human-readable related names: an epic includes its category name; a task includes its category name and, when assigned, its epic name.
 5. Automated fresh-install provisioning and deployment readiness, after the category, epic, and task APIs are in place (see below).
 6. n8n integration through the API; n8n's own internal database configuration is a separate concern.
 
