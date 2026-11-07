@@ -4,6 +4,7 @@ plan.md
 # Local agent preferences and conversation handoff
 /AGENTS.local.md
 /docs/status.md
+/mytodo-telegram.workflow.json
 
 .env
 .env.*

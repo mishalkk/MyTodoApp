@@ -145,15 +145,16 @@ def create_task(payload: TaskCreate, db: Annotated[Session, Depends(get_db)]):
                 detail="Category not found"
             )
 
+
         # find epic if its in the input or payload
         if payload.epic_id is not None:
             epic = db.get(Epic, payload.epic_id)
 
-            if epic.category_id != payload.category_id:
-                raise HTTPException(status_code=422, detail="Epic does not belong to the specified category")
-
             if epic is None:
                 raise HTTPException(status_code=404, detail="Epic not found")
+
+            if epic.category_id != payload.category_id:
+                raise HTTPException(status_code=422, detail="Epic does not belong to the specified category")
 
         task = Task(
             category_id = payload.category_id,
