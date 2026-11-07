@@ -43,11 +43,12 @@ Planned:
 
 ## Running the backend
 
-The current setup requires Docker Compose, an existing configured database, and a root `.env` file containing:
+The current setup requires Docker Compose, an existing configured database, and a root `.env` file. For a new setup, copy `.env.example` to `.env` and replace the placeholders. If you already have a `.env`, add the n8n settings to it and keep your existing database settings.
 
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
 - `DB_HOST`, `DB_PORT`
 - `APP_DB_NAME`, `APP_DB_USER`, `APP_DB_PASSWORD`
+- `N8N_HOST`, `WEBHOOK_URL`, `N8N_EDITOR_BASE_URL` for your n8n reverse proxy
 
 Inside Docker Compose, use `postgres` as the database host and `5432` as the port. Use a regular database login for the backend and keep administrator credentials separate. Do not commit `.env`.
 

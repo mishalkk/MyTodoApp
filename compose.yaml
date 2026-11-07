@@ -32,10 +32,10 @@ services:
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
       - N8N_RUNNERS_ENABLED=true
 
-      - N8N_HOST=n8n.mugenassists.win
+      - N8N_HOST=${N8N_HOST:?Set N8N_HOST in .env}
       - N8N_PROTOCOL=https
-      - WEBHOOK_URL=https://n8n.mugenassists.win/
-      - N8N_EDITOR_BASE_URL=https://n8n.mugenassists.win/
+      - WEBHOOK_URL=${WEBHOOK_URL:?Set WEBHOOK_URL in .env}
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL:?Set N8N_EDITOR_BASE_URL in .env}
       - N8N_PROXY_HOPS=1
 
     volumes:
